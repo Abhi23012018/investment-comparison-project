@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investment Comparison — LIC vs Bank FD vs Mutual Fund</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0c0f14;
+    --surface:   #131720;
+    --card:      #1a1f2e;
+    --border:    rgba(255,255,255,0.07);
+    --lic:       #e8a020;
+    --lic-lt:    rgba(232,160,32,0.12);
+    --lic-glow:  rgba(232,160,32,0.25);
+    --bank:      #3b9eff;
+    --bank-lt:   rgba(59,158,255,0.12);
+    --mf:        #00c896;
+    --mf-lt:     rgba(0,200,150,0.12);
+    --danger:    #ff5252;
+    --danger-lt: rgba(255,82,82,0.10);
+    --text:      #e8eaf0;
+    --muted:     #6b7280;
+    --white:     #ffffff;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Ambient background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 10% 10%, rgba(232,160,32,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 90% 90%, rgba(0,200,150,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 30% at 50% 50%, rgba(59,158,255,0.04) 0%, transparent 60%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* Grid texture */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* ── HEADER ── */
+  .hero {
+    text-align: center;
+    padding: 60px 0 48px;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(232,160,32,0.1);
+    border: 1px solid rgba(232,160,32,0.3);
+    color: var(--lic);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(32px, 5.5vw, 60px);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 14px;
+    letter-spacing: -1px;
+  }
+  .hero h1 em { font-style: normal; color: var(--lic); }
+  .hero-sub {
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 300;
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* ── INPUTS ── */
+  .input-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px 36px;
+    margin-bottom: 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  .input-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--lic), transparent 60%);
+  }
+  .input-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+  .inputs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+  .inp-group { display: flex; flex-direction: column; gap: 8px; }
+  .inp-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .inp-label span { color: var(--lic); font-size: 9px; margin-left: 4px; }
+  .inp-row {
+    display: flex;
+    align-items: center;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .inp-row:focus-within { border-color: rgba(232,160,32,0.5); }
+  .inp-prefix {
+    padding: 0 12px;
+    color: var(--lic);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    flex-shrink: 0;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .inp-row input, .inp-row select {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--white);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    padding: 12px 14px;
+    width: 100%;
+  }
+  .inp-row input::placeholder { color: var(--muted); }
+  .inp-row select option { background: #1a1f2e; color: var(--text); }
+  .slider-row { flex-direction: column; background: none; border: none; gap: 10px; }
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--lic);
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--lic-glow);
+  }
+  .slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .calc-btn {
+    margin-top: 28px;
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--lic), #c87a10);
+    border: none;
+    border-radius: 12px;
+    color: #000;
+    font-family: 'Lato', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .calc-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px var(--lic-glow); }
+  .calc-btn:active { transform: translateY(0); }
+
+  /* ── RESULTS ── */
+  .results { display: none; animation: fadeUp 0.5s ease forwards; }
+  .results.show { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* Summary bar */
+  .summary-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .sum-card {
+    border-radius: 16px;
+    padding: 24px 20px;
+    text-align: center;
+    border: 1px solid transparent;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s;
+  }
+  .sum-card:hover { transform: translateY(-4px); }
+  .sum-card.lic  { background: var(--lic-lt);  border-color: rgba(232,160,32,0.3); }
+  .sum-card.bank { background: var(--bank-lt); border-color: rgba(59,158,255,0.3); }
+  .sum-card.mf   { background: var(--mf-lt);   border-color: rgba(0,200,150,0.3); }
+  .sum-card-icon { font-size: 26px; margin-bottom: 8px; }
+  .sum-card-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .sum-card.lic  .sum-card-name { color: var(--lic); }
+  .sum-card.bank .sum-card-name { color: var(--bank); }
+  .sum-card.mf   .sum-card-name { color: var(--mf); }
+  .sum-amount {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 3vw, 34px);
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .sum-card.lic  .sum-amount { color: var(--lic); }
+  .sum-card.bank .sum-amount { color: var(--bank); }
+  .sum-card.mf   .sum-amount { color: var(--mf); }
+  .sum-note { font-size: 11px; color: var(--muted); }
+  .sum-winner-tag {
+    position: absolute;
+    top: 12px; right: 12px;
+    background: var(--mf);
+    color: #000;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 20px;
+  }
+
+  /* Comparison table */
+  .compare-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .compare-hdr {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .compare-hdr-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .compare-table { width: 100%; border-collapse: collapse; }
+  .compare-table thead th {
+    padding: 14px 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 500;
+    text-align: center;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border);
+  }
+  .compare-table thead th:first-child { text-align: left; color: var(--muted); }
+  .compare-table thead th.lic-h  { color: var(--lic); }
+  .compare-table thead th.bank-h { color: var(--bank); }
+  .compare-table thead th.mf-h   { color: var(--mf); }
+  .compare-table tbody tr {
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s;
+  }
+  .compare-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+  .compare-table tbody tr:last-child { border-bottom: none; }
+  .compare-table td {
+    padding: 16px 20px;
+    font-size: 13px;
+    text-align: center;
+    vertical-align: middle;
+  }
+  .compare-table td:first-child {
+    text-align: left;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--text);
+    padding-left: 28px;
+  }
+  .compare-table td small {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 300;
+    margin-top: 2px;
+  }
+  .val-lic  { color: var(--lic);  font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; }
+  .val-bank { color: var(--bank); font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; }
+  .val-mf   { color: var(--mf);   font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; }
+  .val-nil  { color: var(--danger); font-size: 12px; font-weight: 700; }
+  .val-yes  { color: var(--mf);    font-size: 16px; }
+  .val-no   { color: var(--danger); font-size: 16px; }
+  .winner-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* Bar chart */
+  .bars-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 28px;
+  }
+  .bars-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+  .bar-group { margin-bottom: 22px; }
+  .bar-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .bar-label { font-size: 12px; font-weight: 700; }
+  .bar-amount { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; }
+  .bar-track {
+    height: 12px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+  }
+  .bar-fill.lic  { background: linear-gradient(90deg, var(--lic), #f5c842); }
+  .bar-fill.bank { background: linear-gradient(90deg, var(--bank), #7bbfff); }
+  .bar-fill.mf   { background: linear-gradient(90deg, var(--mf), #4df5c0); }
+  .bar-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* Verdict */
+  .verdict-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .verdict-card {
+    border-radius: 16px;
+    padding: 22px;
+    border: 1px solid var(--border);
+  }
+  .verdict-card.lic-v  { border-color: rgba(232,160,32,0.25); background: linear-gradient(135deg, rgba(232,160,32,0.08), transparent); }
+  .verdict-card.bank-v { border-color: rgba(59,158,255,0.25);  background: linear-gradient(135deg, rgba(59,158,255,0.08), transparent); }
+  .verdict-card.mf-v   { border-color: rgba(0,200,150,0.25);   background: linear-gradient(135deg, rgba(0,200,150,0.08), transparent); }
+  .verdict-icon { font-size: 28px; margin-bottom: 10px; }
+  .verdict-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .verdict-card.lic-v  .verdict-name { color: var(--lic); }
+  .verdict-card.bank-v .verdict-name { color: var(--bank); }
+  .verdict-card.mf-v   .verdict-name { color: var(--mf); }
+  .verdict-pros { list-style: none; margin-bottom: 12px; }
+  .verdict-pros li {
+    font-size: 12px;
+    color: var(--text);
+    padding: 4px 0;
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .verdict-pros li::before {
+    content: '✓';
+    position: absolute; left: 0;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .verdict-card.lic-v  .verdict-pros li::before { color: var(--lic); }
+  .verdict-card.bank-v .verdict-pros li::before { color: var(--bank); }
+  .verdict-card.mf-v   .verdict-pros li::before { color: var(--mf); }
+  .verdict-cons { list-style: none; }
+  .verdict-cons li {
+    font-size: 11px;
+    color: var(--muted);
+    padding: 3px 0;
+    padding-left: 16px;
+    position: relative;
+  }
+  .verdict-cons li::before {
+    content: '✗';
+    position: absolute; left: 0;
+    color: var(--danger);
+    font-size: 10px;
+  }
+  .verdict-best {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .verdict-card.lic-v  .verdict-best { background: var(--lic-lt);  color: var(--lic); }
+  .verdict-card.bank-v .verdict-best { background: var(--bank-lt); color: var(--bank); }
+  .verdict-card.mf-v   .verdict-best { background: var(--mf-lt);   color: var(--mf); }
+
+  /* Final recommendation */
+  .recommend {
+    background: linear-gradient(135deg, rgba(232,160,32,0.1), rgba(0,200,150,0.06));
+    border: 1px solid rgba(232,160,32,0.3);
+    border-radius: 20px;
+    padding: 28px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .recommend::before {
+    content: '🏆';
+    position: absolute;
+    right: 28px; top: 24px;
+    font-size: 48px;
+    opacity: 0.15;
+  }
+  .recommend-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--lic);
+    margin-bottom: 10px;
+  }
+  .recommend h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--white);
+  }
+  .recommend p { font-size: 14px; color: #a0a8b8; line-height: 1.8; }
+  .recommend p strong { color: var(--lic); }
+  .recommend-pills {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+  .pill {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .pill.lic-p  { background: var(--lic-lt);  color: var(--lic);  border: 1px solid rgba(232,160,32,0.3); }
+  .pill.mf-p   { background: var(--mf-lt);   color: var(--mf);   border: 1px solid rgba(0,200,150,0.3); }
+  .pill.bank-p { background: var(--bank-lt); color: var(--bank); border: 1px solid rgba(59,158,255,0.3); }
+
+  /* disclaimer */
+  .disclaimer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 32px;
+    line-height: 1.7;
+    padding: 0 20px;
+  }
+
+  @media (max-width: 640px) {
+    .summary-bar, .verdict-grid { grid-template-columns: 1fr; }
+    .input-panel { padding: 24px 20px; }
+    .recommend  { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">📊 Investment Calculator · India</div>
+    <h1>LIC vs Bank FD<br>vs <em>Mutual Fund</em></h1>
+    <p class="hero-sub">Enter your details and see exactly what each investment gives you — after tax, with life cover, and honest returns.</p>
+  </div>
+
+  <!-- INPUT PANEL -->
+  <div class="input-panel">
+    <div class="input-title">⚙ Your Details — Enter & Compare</div>
+    <div class="inputs-grid">
+
+      <div class="inp-group">
+        <div class="inp-label">Monthly Investment <span>EDITABLE</span></div>
+        <div class="inp-row">
+          <div class="inp-prefix">₹</div>
+          <input type="number" id="monthly" value="3000" min="500" max="100000" step="500" oninput="syncSlider('monthly','monthlySlider')">
+        </div>
+        <div class="slider-row">
+          <input type="range" id="monthlySlider" min="500" max="50000" step="500" value="3000" oninput="syncInput('monthlySlider','monthly')">
+          <div class="slider-labels"><span>₹500</span><span>₹50,000</span></div>
+        </div>
+      </div>
+
+      <div class="inp-group">
+        <div class="inp-label">Investment Term <span>EDITABLE</span></div>
+        <div class="inp-row">
+          <div class="inp-prefix">YRS</div>
+          <input type="number" id="term" value="20" min="5" max="40" oninput="syncSlider('term','termSlider')">
+        </div>
+        <div class="slider-row">
+          <input type="range" id="termSlider" min="5" max="40" step="1" value="20" oninput="syncInput('termSlider','term')">
+          <div class="slider-labels"><span>5 yrs</span><span>40 yrs</span></div>
+        </div>
+      </div>
+
+      <div class="inp-group">
+        <div class="inp-label">Sum Assured (LIC) <span>EDITABLE</span></div>
+        <div class="inp-row">
+          <div class="inp-prefix">₹</div>
+          <input type="number" id="sa" value="1000000" min="100000" step="50000">
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted);">Life cover amount you want (e.g. ₹10,00,000 = ₹10 lakh)</div>
+      </div>
+
+      <div class="inp-group">
+        <div class="inp-label">Tax Bracket <span>EDITABLE</span></div>
+        <div class="inp-row">
+          <select id="taxBracket">
+            <option value="0">0% — No Tax / Retired</option>
+            <option value="5">5% — Up to ₹5L income</option>
+            <option value="20" selected>20% — ₹5L–10L income</option>
+            <option value="30">30% — Above ₹10L income</option>
+          </select>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted);">Used to calculate real after-tax returns on FD & MF</div>
+      </div>
+
+      <div class="inp-group">
+        <div class="inp-label">LIC Bonus Rate <span>₹/₹1000 S.A./yr</span></div>
+        <div class="inp-row">
+          <div class="inp-prefix">₹</div>
+          <input type="number" id="licBonus" value="48" min="30" max="70">
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted);">Jeevan Anand 2024 declared rate: ₹48. Ask your DO for plan-specific rate.</div>
+      </div>
+
+      <div class="inp-group">
+        <div class="inp-label">Final Add. Bonus <span>₹/₹1000 S.A.</span></div>
+        <div class="inp-row">
+          <div class="inp-prefix">₹</div>
+          <input type="number" id="licFAB" value="650" min="0" max="2000">
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted);">One-time at maturity. Jeevan Anand: ~₹650. 0 for Term Plans.</div>
+      </div>
+
+      <div class="inp-group">
+        <div class="inp-label">Bank FD Rate <span>% per year</span></div>
+        <div class="inp-row">
+          <div class="inp-prefix">%</div>
+          <input type="number" id="fdRate" value="7" min="4" max="9" step="0.25">
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted);">SBI/HDFC current rate ~7%. Senior citizens +0.5%.</div>
+      </div>
+
+      <div class="inp-group">
+        <div class="inp-label">Mutual Fund Rate <span>% CAGR (assumed)</span></div>
+        <div class="inp-row">
+          <div class="inp-prefix">%</div>
+          <input type="number" id="mfRate" value="12" min="6" max="20" step="0.5">
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted);">Historical Nifty 50 CAGR ~12–13%. Not guaranteed — market-linked.</div>
+      </div>
+
+    </div>
+    <button class="calc-btn" onclick="calculate()">⚡ Calculate &amp; Compare Now</button>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+
+    <!-- Summary Cards -->
+    <div class="summary-bar" id="summaryBar"></div>
+
+    <!-- Visual Bars -->
+    <div class="bars-section">
+      <div class="bars-title">📊 After-Tax Maturity Comparison</div>
+      <div id="barsContainer"></div>
+    </div>
+
+    <!-- Full Comparison Table -->
+    <div class="compare-section">
+      <div class="compare-hdr">
+        <span style="font-size:18px;">📋</span>
+        <div class="compare-hdr-title">Full Detailed Comparison</div>
+      </div>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>What You Get</th>
+            <th class="lic-h">🏛 LIC</th>
+            <th class="bank-h">🏦 Bank FD</th>
+            <th class="mf-h">📈 Mutual Fund</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Verdict Cards -->
+    <div class="verdict-grid" id="verdictGrid"></div>
+
+    <!-- Final Recommendation -->
+    <div class="recommend" id="recommend"></div>
+
+    <p class="disclaimer">⚠ This calculator is for educational purposes. LIC bonus rates depend on annual declarations. FD rates may change. Mutual Fund returns are market-linked and not guaranteed. Always consult a licensed financial adviser before investing. LIC maturity figures are illustrative based on current declared bonus rates.</p>
+  </div>
+
+</div>
+
+<script>
+function fmtINR(n) {
+  if (n >= 10000000) return '₹' + (n/10000000).toFixed(2) + ' Cr';
+  if (n >= 100000)   return '₹' + (n/100000).toFixed(2)   + ' L';
+  return '₹' + Math.round(n).toLocaleString('en-IN');
+}
+function fmtINRFull(n) {
+  return '₹' + Math.round(n).toLocaleString('en-IN');
+}
+function pct(n) { return n.toFixed(1) + '%'; }
+
+function syncSlider(inputId, sliderId) {
+  document.getElementById(sliderId).value = document.getElementById(inputId).value;
+}
+function syncInput(sliderId, inputId) {
+  document.getElementById(inputId).value = document.getElementById(sliderId).value;
+}
+
+// FV of annuity (monthly payments, compounded monthly)
+function fvAnnuity(monthly, annualRate, years) {
+  const r = annualRate / 100 / 12;
+  const n = years * 12;
+  if (r === 0) return monthly * n;
+  return monthly * ((Math.pow(1 + r, n) - 1) / r);
+}
+
+// Effective CAGR from maturity / total invested
+function cagr(maturity, totalInvested, years) {
+  if (totalInvested <= 0 || years <= 0) return 0;
+  return (Math.pow(maturity / totalInvested, 1 / years) - 1) * 100;
+}
+
+function calculate() {
+  const monthly    = parseFloat(document.getElementById('monthly').value)    || 3000;
+  const term       = parseFloat(document.getElementById('term').value)        || 20;
+  const sa         = parseFloat(document.getElementById('sa').value)          || 1000000;
+  const taxRate    = parseFloat(document.getElementById('taxBracket').value)   / 100;
+  const licBonus   = parseFloat(document.getElementById('licBonus').value)    || 48;
+  const licFAB     = parseFloat(document.getElementById('licFAB').value)       || 650;
+  const fdRate     = parseFloat(document.getElementById('fdRate').value)       || 7;
+  const mfRate     = parseFloat(document.getElementById('mfRate').value)       || 12;
+
+  const annualPrem  = monthly * 12;
+  const totalPaid   = annualPrem * term;
+
+  // ── LIC ──────────────────────────────────────────────────────
+  const licBonus_amt  = (licBonus / 1000) * sa * term;
+  const licFAB_amt    = (licFAB   / 1000) * sa;
+  const licMaturity   = sa + licBonus_amt + licFAB_amt;
+  const licNetGain    = licMaturity - totalPaid;
+  const licAfterTax   = licMaturity;  // 100% tax-free under Sec 10(10D)
+  const licCAGR       = cagr(licMaturity, totalPaid, term);
+  const licTaxSaved80C = Math.min(annualPrem, 150000) * taxRate;
+  const licTotalTax80C = licTaxSaved80C * term;
+
+  // ── BANK FD ───────────────────────────────────────────────────
+  // Monthly RD compounded quarterly equivalent (monthly compounding approx)
+  const fdCorpus      = fvAnnuity(monthly, fdRate, term);
+  const fdGain        = fdCorpus - totalPaid;
+  const fdTaxOnGain   = fdGain * taxRate;          // TDS on interest each year (approx)
+  const fdAfterTax    = fdCorpus - fdTaxOnGain;
+  const fdCAGR        = cagr(fdAfterTax, totalPaid, term);
+  const fdTaxSaved80C = 0;  // RD interest is taxable, no 80C benefit unless 5-yr FD
+
+  // ── MUTUAL FUND ───────────────────────────────────────────────
+  const mfCorpus      = fvAnnuity(monthly, mfRate, term);
+  const mfGain        = mfCorpus - totalPaid;
+  const ltcgExemption = 100000;
+  const taxableMFGain = Math.max(0, mfGain - ltcgExemption);
+  const mfTax         = taxableMFGain * 0.125;   // LTCG 12.5% post July 2024 budget
+  const mfAfterTax    = mfCorpus - mfTax;
+  const mfCAGR        = cagr(mfAfterTax, totalPaid, term);
+  const mfTaxSaved80C = 0;  // Regular MF; ELSS has 80C but with 3yr lock-in
+
+  // ── WINNER ────────────────────────────────────────────────────
+  const maxAfterTax = Math.max(licAfterTax, fdAfterTax, mfAfterTax);
+
+  // ── RENDER SUMMARY CARDS ──────────────────────────────────────
+  document.getElementById('summaryBar').innerHTML = `
+    <div class="sum-card lic">
+      <div class="sum-card-icon">🏛</div>
+      <div class="sum-card-name">LIC Endowment</div>
+      <div class="sum-amount">${fmtINR(licAfterTax)}</div>
+      <div class="sum-note">Tax-Free · Guaranteed · +Life Cover</div>
+    </div>
+    <div class="sum-card bank">
+      <div class="sum-card-icon">🏦</div>
+      <div class="sum-card-name">Bank FD / RD</div>
+      <div class="sum-amount">${fmtINR(fdAfterTax)}</div>
+      <div class="sum-note">After ${pct(taxRate*100)} tax · Safe · No Cover</div>
+    </div>
+    <div class="sum-card mf">
+      ${mfAfterTax === maxAfterTax ? '<div class="sum-winner-tag">HIGHEST RETURN</div>' : ''}
+      <div class="sum-card-icon">📈</div>
+      <div class="sum-card-name">Mutual Fund SIP</div>
+      <div class="sum-amount">${fmtINR(mfAfterTax)}</div>
+      <div class="sum-note">After LTCG 12.5% · Market-linked · No Cover</div>
+    </div>
+  `;
+
+  // ── BARS ──────────────────────────────────────────────────────
+  const bars = [
+    { label: '🏛 LIC (After-Tax)', amount: licAfterTax, cls: 'lic',  sub: `Guaranteed maturity. ${pct(licCAGR)} effective CAGR.` },
+    { label: '🏦 Bank FD (After-Tax)', amount: fdAfterTax, cls: 'bank', sub: `${pct(fdRate)} FD rate. Interest taxed at ${pct(taxRate*100)} slab.` },
+    { label: '📈 Mutual Fund (After-Tax)', amount: mfAfterTax, cls: 'mf', sub: `${pct(mfRate)} assumed CAGR. LTCG 12.5% after ₹1L exemption. NOT guaranteed.` },
+  ];
+  const maxBar = Math.max(licAfterTax, fdAfterTax, mfAfterTax);
+  document.getElementById('barsContainer').innerHTML = bars.map(b => `
+    <div class="bar-group">
+      <div class="bar-top">
+        <span class="bar-label">${b.label}</span>
+        <span class="bar-amount" style="color:var(--${b.cls})">${fmtINRFull(b.amount)}</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill ${b.cls}" data-pct="${(b.amount/maxBar*100).toFixed(1)}"></div>
+      </div>
+      <div class="bar-sub">${b.sub}</div>
+    </div>
+  `).join('');
+
+  setTimeout(() => {
+    document.querySelectorAll('.bar-fill').forEach(el => {
+      el.style.width = el.dataset.pct + '%';
+    });
+  }, 100);
+
+  // ── TABLE ─────────────────────────────────────────────────────
+  const rows = [
+    {
+      label: 'Total Amount Invested',
+      sub: `Over ${term} years`,
+      lic: fmtINRFull(totalPaid), bank: fmtINRFull(totalPaid), mf: fmtINRFull(totalPaid),
+      licCls:'val-lic', bankCls:'val-bank', mfCls:'val-mf'
+    },
+    {
+      label: 'Life Cover / Death Benefit',
+      sub: 'If something happens to you',
+      lic: fmtINRFull(sa) + ' ✅', bank: '❌ ZERO', mf: '❌ ZERO',
+      licCls:'val-lic', bankCls:'val-nil', mfCls:'val-nil'
+    },
+    {
+      label: 'Maturity Amount (Before Tax)',
+      sub: 'What you receive at end of term',
+      lic: fmtINRFull(licMaturity), bank: fmtINRFull(fdCorpus), mf: fmtINRFull(mfCorpus),
+      licCls:'val-lic', bankCls:'val-bank', mfCls:'val-mf'
+    },
+    {
+      label: 'Tax Deducted on Returns',
+      sub: 'Tax you pay on gains',
+      lic: '₹0 — 100% Tax Free ✅', bank: fmtINRFull(fdTaxOnGain) + ' (' + pct(taxRate*100) + ' slab)', mf: fmtINRFull(mfTax) + ' (LTCG 12.5%)',
+      licCls:'val-lic', bankCls:'val-bank', mfCls:'val-mf'
+    },
+    {
+      label: 'Maturity Amount (After Tax)',
+      sub: 'Actual money in your pocket',
+      lic: fmtINRFull(licAfterTax), bank: fmtINRFull(fdAfterTax), mf: fmtINRFull(mfAfterTax),
+      licCls:'val-lic', bankCls:'val-bank', mfCls:'val-mf'
+    },
+    {
+      label: 'Net Gain (After Tax)',
+      sub: 'Profit over total investment',
+      lic: fmtINRFull(licNetGain), bank: fmtINRFull(fdAfterTax - totalPaid), mf: fmtINRFull(mfAfterTax - totalPaid),
+      licCls:'val-lic', bankCls:'val-bank', mfCls:'val-mf'
+    },
+    {
+      label: 'Effective CAGR (After Tax)',
+      sub: 'Your actual annual growth rate',
+      lic: pct(licCAGR), bank: pct(fdCAGR), mf: pct(mfCAGR),
+      licCls:'val-lic', bankCls:'val-bank', mfCls:'val-mf'
+    },
+    {
+      label: 'Section 80C Tax Benefit / Year',
+      sub: 'Annual income tax saved',
+      lic: fmtINRFull(licTaxSaved80C) + ' / year ✅', bank: '❌ NIL on RD', mf: '❌ NIL (regular MF)',
+      licCls:'val-lic', bankCls:'val-nil', mfCls:'val-nil'
+    },
+    {
+      label: 'Total 80C Tax Saved (lifetime)',
+      sub: `Over ${term} years of the policy`,
+      lic: fmtINRFull(licTotalTax80C), bank: '₹0', mf: '₹0',
+      licCls:'val-lic', bankCls:'val-nil', mfCls:'val-nil'
+    },
+    {
+      label: 'Return Guaranteed?',
+      sub: 'Can you be sure of the number?',
+      lic: '<span class="val-yes">✅ Yes</span>', bank: '<span class="val-yes">✅ Yes</span>', mf: '<span class="val-no">❌ No — Market Risk</span>',
+      licCls:'', bankCls:'', mfCls:''
+    },
+    {
+      label: 'Risk Level',
+      sub: 'How safe is your money?',
+      lic: '🟢 Zero Risk', bank: '🟢 Zero Risk', mf: '🔴 Market Risk',
+      licCls:'val-lic', bankCls:'val-bank', mfCls:'val-nil'
+    },
+    {
+      label: 'Liquidity',
+      sub: 'Can you withdraw early?',
+      lic: '⚠ Surrender after 3 yrs (penalty)', bank: '⚠ Premature break (penalty)', mf: '✅ Anytime (except ELSS)',
+      licCls:'val-lic', bankCls:'val-bank', mfCls:'val-mf'
+    },
+    {
+      label: 'Best For',
+      sub: 'Who should choose this?',
+      lic: 'Family protection + guaranteed savings', bank: 'Emergency fund, short-term goals', mf: 'Long-term wealth, high-risk tolerance',
+      licCls:'val-lic', bankCls:'val-bank', mfCls:'val-mf'
+    },
+  ];
+
+  document.getElementById('tableBody').innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.label}<small>${r.sub}</small></td>
+      <td class="${r.licCls}">${r.lic}</td>
+      <td class="${r.bankCls}">${r.bank}</td>
+      <td class="${r.mfCls}">${r.mf}</td>
+    </tr>
+  `).join('');
+
+  // ── VERDICT CARDS ─────────────────────────────────────────────
+  document.getElementById('verdictGrid').innerHTML = `
+    <div class="verdict-card lic-v">
+      <div class="verdict-icon">🏛</div>
+      <div class="verdict-name">LIC Endowment</div>
+      <ul class="verdict-pros">
+        <li>100% guaranteed maturity</li>
+        <li>Life cover included</li>
+        <li>Tax-free under Sec 10(10D)</li>
+        <li>₹46,800 tax saved/year (30% bracket)</li>
+        <li>Safe even if market crashes</li>
+      </ul>
+      <ul class="verdict-cons">
+        <li>Lower returns vs equity MF</li>
+        <li>Illiquid for first 3 years</li>
+        <li>Premium fixed — can't skip</li>
+      </ul>
+      <div class="verdict-best">🎯 Best for: Family protection + guaranteed savings</div>
+    </div>
+    <div class="verdict-card bank-v">
+      <div class="verdict-icon">🏦</div>
+      <div class="verdict-name">Bank FD / RD</div>
+      <ul class="verdict-pros">
+        <li>100% safe (DICGC insured ₹5L)</li>
+        <li>Flexible tenure options</li>
+        <li>Easy to open online</li>
+        <li>Predictable returns</li>
+      </ul>
+      <ul class="verdict-cons">
+        <li>Interest fully taxable at slab</li>
+        <li>No life cover</li>
+        <li>No 80C benefit on regular RD</li>
+        <li>Lowest after-tax returns</li>
+      </ul>
+      <div class="verdict-best">🎯 Best for: Emergency fund, short-term (1–3 yrs)</div>
+    </div>
+    <div class="verdict-card mf-v">
+      <div class="verdict-icon">📈</div>
+      <div class="verdict-name">Mutual Fund SIP</div>
+      <ul class="verdict-pros">
+        <li>Highest potential returns</li>
+        <li>₹1 lakh LTCG exemption/year</li>
+        <li>Full liquidity anytime</li>
+        <li>Flexible SIP amount</li>
+      </ul>
+      <ul class="verdict-cons">
+        <li>Market-linked — NOT guaranteed</li>
+        <li>No life cover</li>
+        <li>Can lose money short-term</li>
+        <li>Needs investor discipline</li>
+      </ul>
+      <div class="verdict-best">🎯 Best for: Long-term wealth (10+ yrs), risk-tolerant</div>
+    </div>
+  `;
+
+  // ── RECOMMENDATION ────────────────────────────────────────────
+  let recText = '';
+  if (term >= 15) {
+    recText = `For your <strong>${term}-year</strong> goal with <strong>${fmtINR(monthly)}/month</strong>, the smartest strategy is to <strong>combine LIC + Mutual Fund</strong>. Put a portion in LIC for guaranteed protection and tax saving, and the rest in a Nifty index fund for wealth creation. This gives you the safety of ₹${(sa/100000).toFixed(0)} lakh life cover, <strong>${fmtINRFull(licTotalTax80C)} total tax savings</strong> over ${term} years, and the growth potential of equity without putting everything at risk.`;
+  } else {
+    recText = `For a shorter <strong>${term}-year</strong> goal, <strong>LIC + Bank FD</strong> is safer. LIC gives you guaranteed maturity + life cover, while FD keeps liquid funds accessible. Avoid equity MF for goals under 7–8 years — market volatility may not recover in time.`;
+  }
+
+  document.getElementById('recommend').innerHTML = `
+    <div class="recommend-label">🏆 Abhishek's Smart Recommendation</div>
+    <h3>Don't choose one. Combine them.</h3>
+    <p>${recText}</p>
+    <div class="recommend-pills">
+      <span class="pill lic-p">🏛 LIC = Protection + Tax Saving</span>
+      <span class="pill mf-p">📈 MF = Wealth Creation</span>
+      <span class="pill bank-p">🏦 FD = Emergency Fund</span>
+    </div>
+  `;
+
+  const el = document.getElementById('results');
+  el.classList.add('show');
+  setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+// Auto-calculate on load
+window.addEventListener('load', calculate);
+</script>
+</body>
+</html>
