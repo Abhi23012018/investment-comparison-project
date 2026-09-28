@@ -703,10 +703,27 @@ function fvAnnuity(monthly, annualRate, years) {
   return monthly * ((Math.pow(1 + r, n) - 1) / r);
 }
 
-// Effective CAGR from maturity / total invested
-function cagr(maturity, totalInvested, years) {
-  if (totalInvested <= 0 || years <= 0) return 0;
-  return (Math.pow(maturity / totalInvested, 1 / years) - 1) * 100;
+// Annualized return for monthly contributions and a terminal value.
+// Contributions occur at the end of each month; this solves the monthly IRR
+// instead of treating all contributions as if they were invested on day one.
+function annualizedContributionReturn(terminalValue, monthlyContribution, years) {
+  const months = Math.round(years * 12);
+  if (!Number.isFinite(terminalValue) || !Number.isFinite(monthlyContribution) ||
+      months <= 0 || monthlyContribution < 0 || terminalValue < 0) return 0;
+  let rate = 0.01;
+  for (let i = 0; i < 100; i++) {
+    const growth = Math.pow(1 + rate, months);
+    const annuity = (growth - 1) / rate;
+    const value = monthlyContribution * annuity;
+    const derivative = monthlyContribution *
+      (months * Math.pow(1 + rate, months - 1) * rate - (growth - 1)) /
+      (rate * rate);
+    const step = (value - terminalValue) / derivative;
+    rate -= step;
+    if (!Number.isFinite(rate) || rate <= -0.9999) rate = 0.0001;
+    if (Math.abs(step) < 1e-10) break;
+  }
+  return (Math.pow(1 + rate, 12) - 1) * 100;
 }
 
 function calculate() {
@@ -728,7 +745,7 @@ function calculate() {
   const licMaturity   = sa + licBonus_amt + licFAB_amt;
   const licNetGain    = licMaturity - totalPaid;
   const licAfterTax   = licMaturity;  // 100% tax-free under Sec 10(10D)
-  const licCAGR       = cagr(licMaturity, totalPaid, term);
+  const licCAGR       = annualizedContributionReturn(licMaturity, monthly, term);
   const licTaxSaved80C = Math.min(annualPrem, 150000) * taxRate;
   const licTotalTax80C = licTaxSaved80C * term;
 
@@ -738,7 +755,7 @@ function calculate() {
   const fdGain        = fdCorpus - totalPaid;
   const fdTaxOnGain   = fdGain * taxRate;          // TDS on interest each year (approx)
   const fdAfterTax    = fdCorpus - fdTaxOnGain;
-  const fdCAGR        = cagr(fdAfterTax, totalPaid, term);
+  const fdCAGR        = annualizedContributionReturn(fdAfterTax, monthly, term);
   const fdTaxSaved80C = 0;  // RD interest is taxable, no 80C benefit unless 5-yr FD
 
   // ── MUTUAL FUND ───────────────────────────────────────────────
@@ -748,7 +765,7 @@ function calculate() {
   const taxableMFGain = Math.max(0, mfGain - ltcgExemption);
   const mfTax         = taxableMFGain * 0.125;   // LTCG 12.5% post July 2024 budget
   const mfAfterTax    = mfCorpus - mfTax;
-  const mfCAGR        = cagr(mfAfterTax, totalPaid, term);
+  const mfCAGR        = annualizedContributionReturn(mfAfterTax, monthly, term);
   const mfTaxSaved80C = 0;  // Regular MF; ELSS has 80C but with 3yr lock-in
 
   // ── WINNER ────────────────────────────────────────────────────
@@ -779,7 +796,7 @@ function calculate() {
 
   // ── BARS ──────────────────────────────────────────────────────
   const bars = [
-    { label: '🏛 LIC (After-Tax)', amount: licAfterTax, cls: 'lic',  sub: `Guaranteed maturity. ${pct(licCAGR)} effective CAGR.` },
+    { label: '🏛 LIC (After-Tax)', amount: licAfterTax, cls: 'lic',  sub: `Guaranteed maturity. ${pct(licCAGR)} effective annualized return.` },
     { label: '🏦 Bank FD (After-Tax)', amount: fdAfterTax, cls: 'bank', sub: `${pct(fdRate)} FD rate. Interest taxed at ${pct(taxRate*100)} slab.` },
     { label: '📈 Mutual Fund (After-Tax)', amount: mfAfterTax, cls: 'mf', sub: `${pct(mfRate)} assumed CAGR. LTCG 12.5% after ₹1L exemption. NOT guaranteed.` },
   ];
@@ -842,7 +859,7 @@ function calculate() {
       licCls:'val-lic', bankCls:'val-bank', mfCls:'val-mf'
     },
     {
-      label: 'Effective CAGR (After Tax)',
+      label: 'Effective annualized return (After Tax)',
       sub: 'Your actual annual growth rate',
       lic: pct(licCAGR), bank: pct(fdCAGR), mf: pct(mfCAGR),
       licCls:'val-lic', bankCls:'val-bank', mfCls:'val-mf'
